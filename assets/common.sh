@@ -107,17 +107,6 @@ EOF
     fi
   fi
 
-  # Optional. The namespace scope. Defaults to default if doesn't specify in kubeconfig.
-  local namespace
-  namespace="$(jq -r '.params.namespace // ""' < "$payload")"
-  if [[ -z "$namespace" ]]; then
-    # Optional. The namespace scope. Defaults to `default`. If set along with `kubeconfig`, `namespace` will override the namespace in the current-context
-    namespace="$(jq -r '.source.namespace // ""' < "$payload")"
-  fi
-  if [[ -n "$namespace" ]]; then
-    exe kubectl config set-context "$(kubectl config current-context)" --namespace="$namespace"
-  fi
-
   # if providing a token we set a user and override context to support both kubeconfig and generated config
   local token
   token="$(jq -r '.source.token // ""' < "$payload")"
@@ -139,6 +128,17 @@ EOF
   context="$(jq -r '.source.context // ""' < "$payload")"
   if [[ -n "$context" ]]; then
     exe kubectl config use-context "$context"
+  fi
+
+  # Optional. The namespace scope. Defaults to default if doesn't specify in kubeconfig.
+  local namespace
+  namespace="$(jq -r '.params.namespace // ""' < "$payload")"
+  if [[ -z "$namespace" ]]; then
+    # Optional. The namespace scope. Defaults to `default`. If set along with `kubeconfig`, `namespace` will override the namespace in the current-context
+    namespace="$(jq -r '.source.namespace // ""' < "$payload")"
+  fi
+  if [[ -n "$namespace" ]]; then
+    exe kubectl config set-context "$(kubectl config current-context)" --namespace="$namespace"
   fi
 
   # Display the client and server version information
